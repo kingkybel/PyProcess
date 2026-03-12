@@ -1,0 +1,9 @@
+/.idea
+/venv*
+.venv*
+__pycache__
+.idea
+*.egg-info
+dist/
+.zen*
+

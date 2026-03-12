@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400" viewBox="0 0 1600 400" role="img" aria-label="PyProcess banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+    <linearGradient id="battery-glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+    <linearGradient id="cog-glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="400" fill="url(#bg)"/>
+  <circle cx="250" cy="340" r="180" fill="#22c55e" fill-opacity="0.12"/>
+  <circle cx="1460" cy="70" r="160" fill="#ec4899" fill-opacity="0.16"/>
+
+  <g transform="translate(1210 88)">
+    <rect x="0" y="0" width="280" height="224" rx="24" fill="#064e3b" fill-opacity="0.16" stroke="#22c55e" stroke-opacity="0.35"/>
+    <rect x="24" y="24" width="232" height="176" rx="14" fill="#0f172a" fill-opacity="0.85"/>
+    
+    <!-- Battery Icon (Magenta) -->
+    <g transform="translate(160 140)">
+      <!-- Battery glow effect -->
+      <circle cx="0" cy="0" r="40" fill="url(#battery-glow)" opacity="0.3"/>
+      <!-- Battery body -->
+      <path d="M0 2H8L3 8V9L6 9L5 14L0 14V2Z" fill="#ec4899" stroke="#f472b6" stroke-width="2"/>
+      <!-- Battery charge indicator -->
+      <rect x="-6" y="-8" width="12" height="16" rx="2" fill="#f9a8d4" opacity="0.6"/>
+      <!-- Connection line -->
+      <path d="M8 7 L25 7" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Cogwheels Icon (Green) -->
+    <g transform="translate(100 140)">
+      <!-- Cog glow effect -->
+      <circle cx="0" cy="0" r="45" fill="url(#cog-glow)" opacity="0.3"/>
+      <!-- Main cog -->
+      <g fill="#22c55e" stroke="#4ade80" stroke-width="2">
+        <path d="M34.62,74.373l7.475-4.667c3.39,3.683,7.442,6.534,11.833,8.479l-1.963,8.558l13.445,3.119l1.984-8.579
+          c4.802,0.201,9.693-0.6,14.372-2.418l4.656,7.479l11.713-7.324l-4.684-7.469c3.674-3.401,6.556-7.458,8.487-11.86l8.554,1.98
+          l3.118-13.469l-8.553-1.979c0.183-4.807-0.63-9.71-2.433-14.377l7.494-4.651l-7.344-11.716l-7.462,4.667
+          c-3.416-3.666-7.44-6.517-11.839-8.484L85.452,3.1L71.989,0l-1.984,8.569c-4.796-0.186-9.7,0.616-14.368,2.419l-4.673-7.48
+          l-11.677,7.319l4.664,7.474c-3.672,3.391-6.55,7.448-8.495,11.856l-8.567-1.981l-3.126,13.458l8.565,1.978
+          c-0.161,4.824,0.624,9.7,2.433,14.383l-7.475,4.657L34.62,74.373z"/>
+        <!-- Inner circle -->
+        <circle cx="55.542" cy="49.856" r="25" fill="#4ade80"/>
+      </g>
+      
+      <!-- Secondary cog -->
+      <g transform="translate(40 40)" fill="#16a34a" stroke="#22c55e" stroke-width="1.5">
+        <path d="M103.456,121.971l-14.016-5.844l-5.737-14.052l14.006-13.922c-6.991-0.984-14.353,1.106-19.753,6.468
+          c-7.385,7.328-8.736,18.354-4.252,27.131l-38.95,38.615l0.01,0.018c-0.01,0.01-0.037,0-0.042,0.018
+          c-1.106,1.104,0.257,4.25,3.026,7.009c2.771,2.784,5.921,4.142,7.025,3.036c0,0,0-0.011,0.007-0.016l38.929-38.605
+          c8.78,4.541,19.79,3.267,27.177-4.065c5.396-5.379,7.531-12.723,6.599-19.722L103.456,121.971z"/>
+      </g>
+      
+      <!-- Wrench (Blue-gray) -->
+      <g transform="translate(20 20)" fill="#94a3b8" stroke="#64748b" stroke-width="1">
+        <path d="M142.524,86.359l4.547-0.602l-0.952-7.146l-4.547,0.604c-0.805-2.378-2.089-4.624-3.825-6.575l2.802-3.636l-5.729-4.375
+          l-2.779,3.647c-2.353-1.16-4.832-1.814-7.344-1.967l-0.602-4.55l-7.145,0.971l0.602,4.542c-2.376,0.796-4.626,2.084-6.568,3.822
+          l-3.655-2.795l-4.355,5.72l3.655,2.786c-1.169,2.336-1.831,4.843-1.97,7.355l-4.553,0.607l0.952,7.14l4.553-0.607
+          c0.811,2.392,2.08,4.619,3.819,6.573l-2.794,3.648l5.729,4.373l2.801-3.65c2.318,1.172,4.809,1.83,7.326,1.965l0.606,4.536
+          l7.136-0.94l-0.603-4.548c2.376-0.788,4.618-2.08,6.569-3.819l3.647,2.797l4.378-5.729l-3.659-2.78
+          C141.726,91.371,142.388,88.854,142.524,86.359z M132.447,92.018c-3.734,4.892-10.726,5.815-15.619,2.084
+          c-4.882-3.726-5.812-10.718-2.091-15.603c3.754-4.897,10.738-5.833,15.617-2.091C135.235,80.146,136.177,87.136,132.447,92.018z"/>
+      </g>
+    </g>
+  </g>
+
+  <text x="90" y="206" font-family="Segoe UI, Arial, sans-serif" font-size="74" font-weight="700" fill="#bbf7d0">PyProcess</text>
+  <text x="92" y="264" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#f9a8d4">Comprehensive file system operations and process management.</text>
+</svg>

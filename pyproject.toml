@@ -1,0 +1,129 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kingkybel-pyprocess"
+dynamic = ["version"]
+description = "Comprehensive Python utility library for file system operations and process management"
+readme = "README.md"
+license = "GPL-2.0-only"
+requires-python = ">=3.8"
+authors = [
+    {name = "Dieter J Kybelksties", email = "github@kybelksties.com"}
+]
+maintainers = [
+    {name = "Dieter J Kybelksties", email = "github@kybelksties.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Filesystems",
+]
+keywords = ["filesystem", "process", "utilities", "path", "subprocess"]
+dependencies = [
+    "psutil>=5.0.0",
+    "kingkybel-pyflashlogger>=2.2.0",
+    "kingkybel-pyfundamentals>=0.1.1"
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "mypy"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+build = ["build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/kingkybel/PyProcess"
+Documentation = "https://github.com/kingkybel/PyProcess#readme"
+Repository = "https://github.com/kingkybel/PyProcess"
+Issues = "https://github.com/kingkybel/PyProcess/issues"
+Changelog = "https://github.com/kingkybel/PyProcess/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["test*", "tools*", "docs*", "examples*"]
+
+[tool.setuptools.dynamic.version]
+attr = "pyprocess.__version__"
+
+[tool.black]
+line-length = 120
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313', 'py314']
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | __pycache__
+  | \.cache
+  # files
+  | \.pytest_cache
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "psutil.*",
+    "flashlogger.*",
+    "fundamentals.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest]
+minversion = "6.0"
+addopts = ["-ra", "-q"]
+testpaths = [
+    "test"
+]
+python_files = ["test_*.py"]
+python_classes = ["*Tests"]
+python_functions = ["test_*"]
+
+[tool.pytest.coverage]
+run.source = [
+    "pyprocess"
+]
+run.branch = true
+run.relative_files = true
+report.exclude_lines = [
+    '\#.*pragma: no cover',
+    'if __name__ == .__main__.:',
+    'raise AssertionError',
+    'raise NotImplementedError',
+]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
