@@ -5,14 +5,8 @@ import shutil
 import unittest
 from pathlib import Path
 
-from pyprocess import touch, pushdir
-from pyprocess.file_utils import (
-    generate_incremental_filename,
-    read_file,
-    write_file,
-    extract_dict_from_string,
+from pyprocess import touch, pushdir, generate_incremental_filename, read_file, write_file, extract_dict_from_string, \
     parse_env_file
-)
 
 
 class FileUtilsTests(unittest.TestCase):

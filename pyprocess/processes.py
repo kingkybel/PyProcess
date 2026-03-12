@@ -2,6 +2,7 @@ import os
 import pty
 import re
 import select
+import shlex
 import subprocess
 import sys
 import termios
@@ -19,7 +20,7 @@ def ping(host_name: str = None) -> tuple[int, str]:
     if is_empty_string(host_name):
         host_name = "127.0.0.1"
     ip = f"- {host_name} doesn't respond -"
-    reval, s_out, s_err = run_command(f"ping -c 1 {host_name}", raise_errors=False)
+    reval, s_out, _s_err = run_command(f"ping -c 1 {host_name}", raise_errors=False)
     if reval == 0:
         ip_list = re.findall(rf"PING {host_name}\s+\(([0-9.]+)\)", s_out)
         ip = ip_list[0]
@@ -33,7 +34,7 @@ def is_tool_installed(name: str) -> bool:
 def assert_tools_installed(tools: (str | list[str])):
     if isinstance(tools, str):
         tools = [tools]
-    missing_tools = list()
+    missing_tools = []
     for tool in tools:
         if not is_tool_installed(tool):
             missing_tools.append(tool)
@@ -68,11 +69,22 @@ def pipe_monitor_thread_function(pipe, verbosity: LogLevel):
         log_progress_output(line.strip(), verbosity=verbosity)
     return piped_str
 
+class CommandFailed(RuntimeError):
+    def __init__(self, cmd, return_code, stdout, stderr):
+        self.cmd = cmd
+        self.return_code = return_code
+        self.stdout = stdout
+        self.stderr = stderr
+        cmd_str = " ".join(shlex.quote(part) for part in cmd)
+        super().__init__(f"Command failed (exit {return_code}): {cmd_str}")
+
+
 
 def run_command(cmd: str | list[str],
                 cwd: PathType = None,
                 raise_errors: bool = True,
                 comment: str = None,
+                tee_path: PathType = None,
                 as_sudo: bool = False,
                 dryrun: bool = False) -> tuple[int, str, str]:
     """
@@ -81,6 +93,7 @@ def run_command(cmd: str | list[str],
     :param cwd: the working directory to use.
     :param raise_errors: if set to True (default) then raise errors instead of returning an error code.
     :param comment: a comment to enhance the log-output.
+    :param tee_path: a path to a file where the output should be tee'd.
     :param as_sudo: run with elevated permissions.
     :param dryrun: if set to True, then do not execute but just output a comment describing the command.
     :return: only if raise_errors == False: tuple (error-code, stout-string, stderr-string)
@@ -124,10 +137,8 @@ def run_command(cmd: str | list[str],
                                    universal_newlines=True)
         log_progress_output("-" * 10 + "sub-process output" + "-" * 10, verbosity=LogLevel.COMMAND_OUTPUT)
 
-        out_thread = ReturningThread(target=pipe_monitor_thread_function,
-                                     args=(process.stdout, LogLevel.COMMAND_OUTPUT))
-        err_thread = ReturningThread(target=pipe_monitor_thread_function,
-                                     args=(process.stderr, LogLevel.WARNING))
+        out_thread = ReturningThread(target=pipe_monitor_thread_function, args=(process.stdout, LogLevel.COMMAND_OUTPUT))
+        err_thread = ReturningThread(target=pipe_monitor_thread_function, args=(process.stderr, LogLevel.WARNING))
         out_thread.start()
         err_thread.start()
         # let the process do its job
@@ -135,6 +146,14 @@ def run_command(cmd: str | list[str],
         # then join the threads and read the output.
         std_out_str = str(out_thread.join())
         std_err_str = str(err_thread.join())
+        if tee_path:
+            # Local import to avoid circular import with pyprocess.file_utils,
+            # which imports run_command for get_git_config().
+            from pyprocess.file_utils import write_file
+            if not is_empty_string(std_out_str):
+                write_file(tee_path, std_out_str, mode="a", allow_system_paths=True, dryrun=dryrun)
+            if not is_empty_string(std_err_str):
+                write_file(tee_path, std_err_str, mode="a", allow_system_paths=True, dryrun=dryrun)
         try:
             if process.stdout:
                 process.stdout.close()
@@ -151,9 +170,8 @@ def run_command(cmd: str | list[str],
         popdir(dryrun=dryrun)
         log_progress_output("-" * 40, LogLevel.COMMAND_OUTPUT)
 
-        if return_code != 0:
-            if raise_errors:
-                error(f"run_command(cmd='{cmd_str}' failed with error-code '{return_code}':\n{std_err_str}")
+        if return_code != 0 and raise_errors:
+            error(f"run_command(cmd='{cmd_str}' failed with error-code '{return_code}':\n{std_err_str}")
 
         return return_code, std_out_str, std_err_str
 
@@ -204,14 +222,14 @@ def run_interactive_command(cmd: str | list,
 
         try:
             process = subprocess.Popen(cmd,
-                                       # cwd=cwd,
+                                       cwd=cwd,
                                        preexec_fn=os.setsid,
                                        stdin=slave_fd,
                                        stdout=slave_fd,
                                        stderr=slave_fd,
                                        universal_newlines=True)
             while process.poll() is None:
-                r, w, e = select.select([sys.stdin, master_fd], [], [])
+                r, _w, _e = select.select([sys.stdin, master_fd], [], [])
                 if sys.stdin in r:
                     d = os.read(sys.stdin.fileno(), 10240)
                     os.write(master_fd, d)
@@ -284,7 +302,6 @@ def rsync(source: PathType,
 def mkdir_remote(host: str,
                  path: PathType,
                  parents: bool = True,
-                 cwd: PathType = None,
                  raise_errors: bool = True,
                  comment: str = None,
                  as_sudo: bool = False,

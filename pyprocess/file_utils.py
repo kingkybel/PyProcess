@@ -90,7 +90,7 @@ def write_file(filename: PathType,
 
 
 def extract_dict_from_string(content: (str | list[str])):
-    key_val_dict = dict()
+    key_val_dict = {}
     lines = content.split("\n")
     for line in lines:
         key_val = squeeze_chars(source=(line.split("#")[0]), squeeze_set="\t ").split("=")
@@ -107,9 +107,13 @@ def extract_dict_from_string(content: (str | list[str])):
 def parse_env_file(filename: PathType, dryrun: bool = False) -> dict[str, str]:
     """
     Simple *.env file parser.
+    
     Ignores:
-        – comments (Everything after '#')
-        – empty or whitespace-only lines, ignoring comments
+    <ul>
+        <li> comments (Everything after '#')</li>
+        <li> empty or whitespace-only lines, ignoring comments </li>
+    </ul>
+    
     Creates dictionary of key/value pairs given as
     MY_KEY1  = My value 1
     MY_KEY_2 = 234
@@ -118,7 +122,7 @@ def parse_env_file(filename: PathType, dryrun: bool = False) -> dict[str, str]:
     :return: dictionary of key/value pairs.
     """
     content = read_file(filename=filename, dryrun=dryrun)
-    key_val_dict = dict()
+    key_val_dict = {}
     if not dryrun:
         key_val_dict = extract_dict_from_string(content)
     return key_val_dict
@@ -127,7 +131,7 @@ def parse_env_file(filename: PathType, dryrun: bool = False) -> dict[str, str]:
 def get_git_config(path: PathType = None,
                    allow_system_paths: bool = False,
                    dryrun: bool = False) -> dict[str, str]:
-    key_val_dict = dict()
+    key_val_dict = {}
     if path is None:
         path = valid_absolute_path(".", allow_system_paths=allow_system_paths)
     assert_tools_installed("git")

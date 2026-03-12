@@ -1,4 +1,4 @@
 setuptools
 psutil>=5.0.0
-kingkybel-pyfundamentals>=0.4.0
+kingkybel-pyfundamentals>=0.4.4
 kingkybel-pyflashlogger>=2.5.0

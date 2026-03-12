@@ -1,8 +1,12 @@
 #!/bin/env python3
-
+import os
+import shutil
 import unittest
+from pathlib import Path
 
-from pyprocess import *
+from pyprocess import mkdir, pushdir, make_path_str_list, glob_path_patterns, remove, touch, current_dir, GlobMode, \
+    popdir, valid_absolute_path, FileSystemObjectType, set_file_last_modified, symbolic_link, find, is_stale_link, \
+    FindSortField, is_empty_dir, remove_stale_links, remove_empty_dirs, cp, mv
 
 
 class FileSystemObjectTests(unittest.TestCase):
@@ -49,12 +53,8 @@ class FileSystemObjectTests(unittest.TestCase):
 
         self.assertTrue(has_thrown)
 
-        has_thrown = False
-        try:
+        with self.assertRaises(SystemExit):
             make_path_str_list([path1, [], path3])
-        except SystemExit:
-            has_thrown = True
-        self.assertTrue(has_thrown)
 
     def test_glob_path_patterns_successful(self):
         dir1 = self.test_folder / "test-glob/sub/sub1"
@@ -155,7 +155,7 @@ class FileSystemObjectTests(unittest.TestCase):
         # Create a test file in the test folder to ensure the path exists
         test_file = self.test_folder / "test.txt"
         touch(test_file)
-        
+
         # Test with absolute path instead of relative path
         result = valid_absolute_path(str(test_file))
         self.assertEqual(result, test_file)
@@ -231,7 +231,7 @@ class FileSystemObjectTests(unittest.TestCase):
         shutil.rmtree(tmp_dir, ignore_errors=True)
         mkdir(tmp_dir)
 
-        test_file = tmp_dir/"test.txt"
+        test_file = tmp_dir / "test.txt"
         touch(test_file)
 
         import datetime

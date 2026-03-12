@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import glob
 import grp
 import os
@@ -371,7 +373,10 @@ def current_dir() -> Path:
     try:
         cwd = os.getcwd()
     except OSError:
-        cwd = psutil.Process(os.getpid()).cwd()
+        if psutil is not None:
+            cwd = psutil.Process(os.getpid()).cwd()
+        else:
+            cwd = str(Path.home())
     return valid_absolute_path(cwd, protect_system_patterns=[])
 
 
