@@ -27,6 +27,13 @@ LINUX_PROTECTED_DIR_PATTERNS = ["^/$", "^/bin", "^/boot", "^/dev", "^/lib",
                                 "^/media", "^/proc", "^/root", "^/run",
                                 "^/sbin", "^/sys", "^/usr"]
 
+def to_path_string(path: PathType) -> str:
+    """
+    Convert a PathType to a string.
+    :param path: the path to convert
+    :return: the path as a string
+    """
+    return str(Path(path))
 
 def valid_absolute_path(path: PathType,
                         protect_system_patterns: (str | list[str]) = None,
