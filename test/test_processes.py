@@ -14,7 +14,8 @@ from pyprocess.processes import (
     assert_tools_installed,
     check_correct_tool_version,
     pipe_monitor_thread_function,
-    run_command
+    run_command,
+    run_interactive_command
 )
 
 
@@ -354,6 +355,128 @@ class ProcessesTests(unittest.TestCase):
         run_command("echo test@#$%^&*()", raise_errors=False)
 
         # Should handle special characters correctly
+
+
+    @patch('pyprocess.processes.sys.stdout')
+    @patch('pyprocess.processes.subprocess.Popen')
+    @patch('pyprocess.processes.pty.openpty')
+    @patch('pyprocess.processes.select.select')
+    @patch('pyprocess.processes.os.read')
+    @patch('pyprocess.processes.os.write')
+    @patch('pyprocess.processes.termios.tcgetattr')
+    @patch('pyprocess.processes.termios.tcsetattr')
+    @patch('pyprocess.processes.tty.setraw')
+    @patch('pyprocess.processes.pushdir')
+    @patch('pyprocess.processes.popdir')
+    @patch('pyprocess.processes.current_dir')
+    def test_run_interactive_command_with_on_line_callback(
+            self,
+            mock_current_dir, mock_popdir, mock_pushdir,
+            mock_tty_setraw, mock_tcsetattr, mock_tcgetattr,
+            mock_os_write, mock_os_read, mock_select, mock_openpty, mock_popen,
+            mock_stdout
+    ):
+        mock_stdout.fileno.return_value = 1
+        """Test run_interactive_command with on_line callback"""
+        mock_current_dir.return_value = "/test"
+        mock_master_fd = 3
+        mock_slave_fd = 4
+        mock_openpty.return_value = (mock_master_fd, mock_slave_fd)
+
+        mock_process = MagicMock()
+        mock_process.poll.side_effect = [None, 0]
+        mock_popen.return_value = mock_process
+
+        # Simulate output from master_fd: yields two lines
+        mock_os_read.side_effect = [
+            b"line1\nline2\n",
+        ]
+
+        # Make select return master_fd as readable
+        mock_select.side_effect = [
+            ([mock_master_fd], [], []),  # first iteration: master_fd has data
+        ]
+
+        collected_lines = []
+
+        def line_collector(line):
+            collected_lines.append(line)
+
+        run_interactive_command("echo test", on_line=line_collector)
+
+        self.assertEqual(len(collected_lines), 2)
+        self.assertEqual(collected_lines[0], "line1")
+        self.assertEqual(collected_lines[1], "line2")
+
+    @patch('pyprocess.processes.sys.stdout')
+    @patch('pyprocess.processes.subprocess.Popen')
+    @patch('pyprocess.processes.pty.openpty')
+    @patch('pyprocess.processes.select.select')
+    @patch('pyprocess.processes.os.read')
+    @patch('pyprocess.processes.os.write')
+    @patch('pyprocess.processes.termios.tcgetattr')
+    @patch('pyprocess.processes.termios.tcsetattr')
+    @patch('pyprocess.processes.tty.setraw')
+    @patch('pyprocess.processes.pushdir')
+    @patch('pyprocess.processes.popdir')
+    @patch('pyprocess.processes.current_dir')
+    def test_run_interactive_command_with_on_line_callback_no_newline(
+            self,
+            mock_current_dir, mock_popdir, mock_pushdir,
+            mock_tty_setraw, mock_tcsetattr, mock_tcgetattr,
+            mock_os_write, mock_os_read, mock_select, mock_openpty, mock_popen,
+            mock_stdout
+    ):
+        mock_stdout.fileno.return_value = 1
+        """Test run_interactive_command with on_line callback - partial output without newline"""
+        mock_current_dir.return_value = "/test"
+        mock_master_fd = 3
+        mock_slave_fd = 4
+        mock_openpty.return_value = (mock_master_fd, mock_slave_fd)
+
+        mock_process = MagicMock()
+        # Process stays alive long enough for reads, then exits
+        mock_process.poll.side_effect = [None, None, 0]
+        mock_popen.return_value = mock_process
+
+        # Single read without trailing newline
+        mock_os_read.side_effect = [
+            b"partial line without newline",
+        ]
+
+        mock_select.side_effect = [
+            ([mock_master_fd], [], []),
+            ([], [], []),
+        ]
+
+        collected_lines = []
+
+        def line_collector(line):
+            collected_lines.append(line)
+
+        run_interactive_command("echo test", on_line=line_collector)
+
+        # No complete lines - buffered but not emitted
+        self.assertEqual(len(collected_lines), 0)
+
+    @patch('pyprocess.processes.squeeze_chars')
+    @patch('pyprocess.processes.pushdir')
+    @patch('pyprocess.processes.popdir')
+    @patch('pyprocess.processes.current_dir')
+    def test_run_interactive_command_dryrun(self, mock_current_dir, mock_popdir, mock_pushdir, mock_squeeze):
+        """Test run_interactive_command with dryrun mode - on_line should not be called"""
+        mock_current_dir.return_value = "/test"
+        mock_squeeze.return_value = "echo test"
+
+        callback_called = False
+
+        def never_called(_line):
+            nonlocal callback_called
+            callback_called = True
+
+        run_interactive_command("echo test", dryrun=True, on_line=never_called)
+
+        self.assertFalse(callback_called)
 
 
 if __name__ == '__main__':

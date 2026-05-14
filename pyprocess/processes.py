@@ -49,24 +49,28 @@ def check_correct_tool_version(tool: str, version: str) -> bool:
     return True
 
 
-def pipe_monitor_thread_function(pipe, verbosity: LogLevel):
+def pipe_monitor_thread_function(pipe, verbosity: LogLevel, line_callback: callable = None):
     """
     Function that runs as thread and is monitoring the output of a pipe.
     :param pipe: file-pipe: either stdin or stdout.
     :param verbosity: log-level so out put can be customised.
+    :param line_callback: optional callable invoked for each line (without trailing newline).
     :return: the string that was piped to the pipe.
     """
     piped_str = ""
     pipe_empty = 0
     for line in pipe:
         piped_str += line
+        stripped = line.rstrip("\n")
+        if line_callback:
+            line_callback(stripped)
         if is_empty_string(line.strip()):
             pipe_empty += 1
             if pipe_empty >= 10:
                 break
         else:
             pipe_empty = 0
-        log_progress_output(line.strip(), verbosity=verbosity)
+        log_progress_output(stripped, verbosity=verbosity)
     return piped_str
 
 class CommandFailed(RuntimeError):
@@ -86,7 +90,9 @@ def run_command(cmd: str | list[str],
                 comment: str = None,
                 tee_path: PathType = None,
                 as_sudo: bool = False,
-                dryrun: bool = False) -> tuple[int, str, str]:
+                dryrun: bool = False,
+                on_stdout_line: callable = None,
+                on_stderr_line: callable = None) -> tuple[int, str, str]:
     """
     Run a command in a sub-process.
     :param cmd: command to execute.
@@ -96,6 +102,8 @@ def run_command(cmd: str | list[str],
     :param tee_path: a path to a file where the output should be tee'd.
     :param as_sudo: run with elevated permissions.
     :param dryrun: if set to True, then do not execute but just output a comment describing the command.
+    :param on_stdout_line: optional callable invoked for each stdout line.
+    :param on_stderr_line: optional callable invoked for each stderr line.
     :return: only if raise_errors == False: tuple (error-code, stout-string, stderr-string)
     """
     if isinstance(cmd, str):
@@ -137,8 +145,8 @@ def run_command(cmd: str | list[str],
                                    universal_newlines=True)
         log_progress_output("-" * 10 + "sub-process output" + "-" * 10, verbosity=LogLevel.COMMAND_OUTPUT)
 
-        out_thread = ReturningThread(target=pipe_monitor_thread_function, args=(process.stdout, LogLevel.COMMAND_OUTPUT))
-        err_thread = ReturningThread(target=pipe_monitor_thread_function, args=(process.stderr, LogLevel.WARNING))
+        out_thread = ReturningThread(target=pipe_monitor_thread_function, args=(process.stdout, LogLevel.COMMAND_OUTPUT, on_stdout_line))
+        err_thread = ReturningThread(target=pipe_monitor_thread_function, args=(process.stderr, LogLevel.WARNING, on_stderr_line))
         out_thread.start()
         err_thread.start()
         # let the process do its job
@@ -180,7 +188,8 @@ def run_interactive_command(cmd: str | list,
                             cwd: PathType = None,
                             comment: str = "",
                             as_sudo: bool = False,
-                            dryrun: bool = False):
+                            dryrun: bool = False,
+                            on_line: callable = None):
     """
     Run an interactive command in a sub-process.
     :param cmd: command to execute.
@@ -188,6 +197,7 @@ def run_interactive_command(cmd: str | list,
     :param comment: a comment to enhance the log-output.
     :param as_sudo: run with elevated permissions.
     :param dryrun: if set to True, then do not execute but just output a comment describing the command.
+    :param on_line: optional callable invoked for each complete line of output (without trailing newline).
     :return: None.
     """
     if isinstance(cmd, str):
@@ -228,6 +238,7 @@ def run_interactive_command(cmd: str | list,
                                        stdout=slave_fd,
                                        stderr=slave_fd,
                                        universal_newlines=True)
+            line_buffer = ""
             while process.poll() is None:
                 r, _w, _e = select.select([sys.stdin, master_fd], [], [])
                 if sys.stdin in r:
@@ -237,6 +248,11 @@ def run_interactive_command(cmd: str | list,
                     o = os.read(master_fd, 10240)
                     if o:
                         os.write(sys.stdout.fileno(), o)
+                        if on_line:
+                            line_buffer += o.decode() if isinstance(o, bytes) else o
+                            while "\n" in line_buffer:
+                                line, line_buffer = line_buffer.split("\n", 1)
+                                on_line(line)
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_tty)
 
